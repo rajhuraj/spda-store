@@ -52,7 +52,9 @@ export default function StorePage() {
         <span style={{ fontFamily: "Oswald, sans-serif", letterSpacing: 1, fontSize: "1.05rem" }}>
           SPDA <span style={{ color: "var(--gold-light)" }}>Store</span>
         </span>
-        <span className="topbar-tagline">Training gear — seedha kharido</span>
+        <a href="https://rajhuraj.github.io/spdaetah/index.html" className="topbar-link">
+          🏠 Academy Website
+        </a>
       </div>
 
       {/* CATEGORY FILTER */}
@@ -91,11 +93,20 @@ export default function StorePage() {
           padding: 14px 20px;
           border-bottom: 1px solid rgba(200, 149, 42, 0.2);
         }
-        .topbar-tagline {
+        .topbar-link {
           margin-left: auto;
-          font-size: 0.8rem;
-          opacity: 0.5;
-          display: none;
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: var(--gold-light);
+          background: rgba(200, 149, 42, 0.12);
+          border: 1px solid rgba(200, 149, 42, 0.4);
+          border-radius: 30px;
+          padding: 6px 12px;
+          text-decoration: none;
+          white-space: nowrap;
+        }
+        @media (hover: hover) {
+          .topbar-link:hover { background: rgba(200, 149, 42, 0.22); }
         }
         .filter-row {
           display: flex;
@@ -119,7 +130,6 @@ export default function StorePage() {
         }
         @media (min-width: 540px) {
           .products-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 18px 20px 60px; }
-          .topbar-tagline { display: inline; }
           .filter-row { padding: 16px 20px 4px; }
         }
         @media (min-width: 768px) {
