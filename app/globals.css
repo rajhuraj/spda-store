@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Oswald:wght@400;600;700&display=swap');
+
+:root {
+  --olive: #3d4a1e;
+  --olive-dark: #2a3312;
+  --gold: #c8952a;
+  --gold-light: #e8b84b;
+  --white: #ffffff;
+  --danger: #c0392b;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--olive-dark);
+  color: var(--white);
+  font-family: 'Rajdhani', sans-serif;
+}
+
+h1, h2, h3, .heading {
+  font-family: 'Oswald', sans-serif;
+}
+
+a { color: inherit; }
+
+button, input, select {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.btn {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--olive-dark);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.2s;
+}
+.btn:hover { background: var(--gold-light); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--gold);
+  color: var(--gold-light);
+}
+.btn-outline:hover { background: rgba(200,149,42,0.15); }
+
+.input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(200,149,42,0.35);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--white);
+  font-size: 0.95rem;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.card {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(200,149,42,0.25);
+  border-radius: 12px;
+}
