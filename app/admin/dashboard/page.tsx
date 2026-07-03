@@ -42,33 +42,41 @@ export default function DashboardPage() {
     if (data) setProducts(data as Product[]);
   }
 
+  // ── LIVE BROWSER FETCH ──
+  // Ye seedha tumhare browser se chalta hai (Supabase server se nahi),
+  // isliye Amazon/Flipkart ka bot-block kaafi kam lagta hai. Uses
+  // microlink.io — free public API, koi key nahi chahiye.
   async function handleFetchMeta() {
     if (!sourceUrl.trim()) return;
     setFetching(true);
     setFetchMsg("");
 
-    const { data, error } = await supabase.functions.invoke("fetch-product-meta", {
-      body: { url: sourceUrl.trim() },
-    });
-
-    setFetching(false);
-
-    if (error || !data) {
-      setFetchMsg("Auto-fetch nahi ho paya — naam/photo neeche manually daal do.");
-      return;
-    }
-    if (data.error) {
-      setFetchMsg(data.error);
-    }
-    if (data.title) setName(data.title);
-    if (data.image) setImageUrl(data.image);
-    if (data.price) setPrice(data.price);
-
-    if (!data.price) {
-      setFetchMsg((prev) =>
-        prev || "Photo/naam mil gaya, price is site se nahi mila — khud daal do."
+    try {
+      const res = await fetch(
+        `https://api.microlink.io/?url=${encodeURIComponent(sourceUrl.trim())}&palette=false`
       );
+      const json = await res.json();
+
+      if (json.status !== "success") {
+        setFetchMsg("Is link se data nahi mila — naam/photo manually daal do.");
+        setFetching(false);
+        return;
+      }
+
+      const d = json.data;
+      if (d.title) setName(d.title);
+      if (d.image?.url) setImageUrl(d.image.url);
+      else if (d.logo?.url) setImageUrl(d.logo.url);
+
+      setFetchMsg(
+        d.image?.url
+          ? "Naam aur photo mil gaye ✅ — price khud check karke daal do (wo automatically nahi milta)."
+          : "Naam mil gaya, photo nahi mili — image URL manually daal do."
+      );
+    } catch (err) {
+      setFetchMsg("Kuch galat hua — naam/photo manually daal do.");
     }
+    setFetching(false);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -94,7 +102,6 @@ export default function DashboardPage() {
       return;
     }
 
-    // reset form
     setSourceUrl("");
     setName("");
     setCategory("General");
