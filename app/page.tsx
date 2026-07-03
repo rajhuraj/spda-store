@@ -23,7 +23,6 @@ export default function StorePage() {
     loadProducts();
   }, []);
 
-  // Close modal on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setSelected(null);
@@ -31,6 +30,14 @@ export default function StorePage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Modal khule to background scroll na ho
+  useEffect(() => {
+    document.body.style.overflow = selected ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selected]);
 
   const categories = Array.from(new Set(products.map((p) => p.category))).sort();
   const filtered =
@@ -41,54 +48,17 @@ export default function StorePage() {
   return (
     <main>
       {/* TOP BAR */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "14px 20px",
-          borderBottom: "1px solid rgba(200,149,42,0.2)",
-        }}
-      >
+      <div className="topbar">
         <span style={{ fontSize: 18 }}>⭐</span>
         <span style={{ fontFamily: "Oswald, sans-serif", letterSpacing: 1, fontSize: "1.05rem" }}>
           SPDA <span style={{ color: "var(--gold-light)" }}>Store</span>
         </span>
-      </div>
-
-      {/* BANNER */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #2a3312 0%, #3d4a1e 60%, #4a5a20 100%)",
-          padding: "30px 20px 26px",
-          textAlign: "center",
-          borderBottom: "2px solid rgba(200,149,42,0.3)",
-        }}
-      >
-        <h1 style={{ fontSize: "clamp(1.4rem,2.8vw,1.9rem)", letterSpacing: "1px", margin: 0 }}>
-          Training <span style={{ color: "var(--gold-light)" }}>Gear</span> Store
-        </h1>
-        <p style={{ color: "rgba(255,255,255,0.6)", marginTop: 6, fontSize: "0.9rem" }}>
-          Yahi gear hum recommend karte hain — apna kit select karo
-        </p>
+        <span className="topbar-tagline">Training gear — seedha kharido</span>
       </div>
 
       {/* CATEGORY FILTER */}
       {categories.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            padding: "16px 20px 4px",
-            overflowX: "auto",
-            maxWidth: 1100,
-            margin: "0 auto",
-            position: "sticky",
-            top: 0,
-            background: "var(--olive-dark)",
-            zIndex: 10,
-          }}
-        >
+        <div className="filter-row">
           <Chip label="Sabhi" active={activeCategory === "all"} onClick={() => setActiveCategory("all")} />
           {categories.map((cat) => (
             <Chip key={cat} label={cat} active={activeCategory === cat} onClick={() => setActiveCategory(cat)} />
@@ -97,16 +67,7 @@ export default function StorePage() {
       )}
 
       {/* GRID */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))",
-          gap: 20,
-          padding: "20px 20px 70px",
-          maxWidth: 1100,
-          margin: "0 auto",
-        }}
-      >
+      <div className="products-grid">
         {loading && <p style={{ opacity: 0.6 }}>Loading...</p>}
 
         {!loading && filtered.length === 0 && (
@@ -120,90 +81,36 @@ export default function StorePage() {
         ))}
       </div>
 
-      {/* DETAIL MODAL */}
+      {/* DETAIL MODAL — fully opaque, kuch peeche nahi dikhega */}
       {selected && (
-        <div
-          onClick={() => setSelected(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.65)",
-            backdropFilter: "blur(3px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
-            zIndex: 100,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="card"
-            style={{
-              maxWidth: 720,
-              width: "100%",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              position: "relative",
-            }}
-          >
-            <button
-              onClick={() => setSelected(null)}
-              aria-label="Band karo"
-              style={{
-                position: "absolute",
-                top: 12,
-                right: 12,
-                background: "rgba(0,0,0,0.5)",
-                border: "none",
-                color: "white",
-                width: 34,
-                height: 34,
-                borderRadius: "50%",
-                fontSize: 18,
-                cursor: "pointer",
-                zIndex: 2,
-              }}
-            >
+        <div className="modal-overlay" onClick={() => setSelected(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="modal-card card">
+            <button onClick={() => setSelected(null)} aria-label="Band karo" className="modal-close">
               ✕
             </button>
 
-            <div
-              style={{
-                aspectRatio: "16/10",
-                background: "rgba(255,255,255,0.04)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <div className="modal-photo">
               {selected.image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={selected.image_url}
-                  alt={selected.name}
-                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                />
+                <img src={selected.image_url} alt={selected.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
               ) : (
                 <span style={{ opacity: 0.3 }}>No photo</span>
               )}
             </div>
 
-            <div style={{ padding: "22px 26px 28px" }}>
+            <div style={{ padding: "20px 22px 26px" }}>
               <div style={{ fontSize: "0.78rem", color: "var(--gold-light)", fontWeight: 700, letterSpacing: 0.5 }}>
                 {selected.category}
               </div>
-              <h2 style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.5rem", margin: "6px 0 14px" }}>
+              <h2 style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.35rem", margin: "6px 0 14px" }}>
                 {selected.name}
               </h2>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 22 }}>
-                <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.8rem", color: "var(--gold-light)" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 20 }}>
+                <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.6rem", color: "var(--gold-light)" }}>
                   {selected.price}
                 </span>
                 {selected.mrp && (
-                  <span style={{ fontSize: "1rem", opacity: 0.4, textDecoration: "line-through" }}>
+                  <span style={{ fontSize: "0.95rem", opacity: 0.4, textDecoration: "line-through" }}>
                     {selected.mrp}
                   </span>
                 )}
@@ -221,75 +128,123 @@ export default function StorePage() {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .topbar {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 20px;
+          border-bottom: 1px solid rgba(200, 149, 42, 0.2);
+        }
+        .topbar-tagline {
+          margin-left: auto;
+          font-size: 0.8rem;
+          opacity: 0.5;
+          display: none;
+        }
+        .filter-row {
+          display: flex;
+          gap: 8px;
+          padding: 14px 16px 4px;
+          overflow-x: auto;
+          max-width: 1100px;
+          margin: 0 auto;
+          position: sticky;
+          top: 0;
+          background: var(--olive-dark);
+          z-index: 10;
+        }
+        .products-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+          padding: 16px 16px 60px;
+          max-width: 1100px;
+          margin: 0 auto;
+        }
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: #14180a;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          z-index: 100;
+        }
+        .modal-card {
+          max-width: 720px;
+          width: 100%;
+          height: 100%;
+          max-height: 100vh;
+          overflow-y: auto;
+          border-radius: 0;
+          border: none;
+          position: relative;
+        }
+        .modal-photo {
+          aspect-ratio: 1;
+          background: rgba(255, 255, 255, 0.04);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .modal-close {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          background: rgba(0, 0, 0, 0.55);
+          border: none;
+          color: white;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          font-size: 18px;
+          cursor: pointer;
+          z-index: 2;
+        }
+
+        @media (min-width: 540px) {
+          .products-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 18px 20px 60px; }
+          .topbar-tagline { display: inline; }
+          .filter-row { padding: 16px 20px 4px; }
+        }
+        @media (min-width: 768px) {
+          .products-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 20px 24px 70px; }
+          .modal-overlay { padding: 20px; background: rgba(20, 24, 10, 0.96); }
+          .modal-card { height: auto; max-height: 90vh; border-radius: 12px; border: 1.5px solid rgba(200,149,42,0.25); }
+        }
+        @media (min-width: 1024px) {
+          .products-grid { grid-template-columns: repeat(5, 1fr); }
+        }
+      `}</style>
     </main>
   );
 }
 
 function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void }) {
-  const [hover, setHover] = useState(false);
   return (
-    <div
-      className="card"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      onClick={onOpen}
-      style={{
-        overflow: "hidden",
-        cursor: "pointer",
-        transform: hover ? "translateY(-4px)" : "none",
-        borderColor: hover ? "var(--gold)" : undefined,
-        boxShadow: hover ? "0 10px 26px rgba(0,0,0,0.35)" : "none",
-        transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
-      }}
-    >
-      <div
-        style={{
-          aspectRatio: "1",
-          background: "rgba(255,255,255,0.04)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-        }}
-      >
+    <div className="p-card card" onClick={onOpen}>
+      <div className="p-photo">
         {product.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.image_url}
-            alt={product.name}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transform: hover ? "scale(1.05)" : "scale(1)",
-              transition: "transform 0.25s ease",
-            }}
-          />
+          <img src={product.image_url} alt={product.name} className="p-img" />
         ) : (
           <span style={{ opacity: 0.3, fontSize: 12 }}>No photo</span>
         )}
       </div>
-      <div style={{ padding: "13px 15px 16px" }}>
-        <div style={{ fontSize: "0.7rem", color: "var(--gold-light)", fontWeight: 700, letterSpacing: 0.3 }}>
+      <div style={{ padding: "11px 12px 14px" }}>
+        <div style={{ fontSize: "0.68rem", color: "var(--gold-light)", fontWeight: 700, letterSpacing: 0.3 }}>
           {product.category}
         </div>
-        <div
-          style={{
-            fontFamily: "Oswald, sans-serif",
-            fontSize: "1rem",
-            margin: "4px 0 10px",
-            lineHeight: 1.25,
-            minHeight: "2.4em",
-          }}
-        >
-          {product.name}
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
-          <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.15rem", color: "var(--gold-light)" }}>
+        <div className="p-name">{product.name}</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+          <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.02rem", color: "var(--gold-light)" }}>
             {product.price}
           </span>
           {product.mrp && (
-            <span style={{ fontSize: "0.8rem", opacity: 0.4, textDecoration: "line-through" }}>
+            <span style={{ fontSize: "0.72rem", opacity: 0.4, textDecoration: "line-through" }}>
               {product.mrp}
             </span>
           )}
@@ -300,24 +255,48 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void
           rel="noopener noreferrer sponsored"
           onClick={(e) => e.stopPropagation()}
           className="btn"
-          style={{ display: "block", fontSize: "0.9rem", padding: "9px" }}
+          style={{ display: "block", fontSize: "0.84rem", padding: "8px" }}
         >
           Buy Now
         </a>
       </div>
+      <style jsx>{`
+        .p-card {
+          overflow: hidden;
+          cursor: pointer;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+        .p-photo {
+          aspect-ratio: 1;
+          background: rgba(255, 255, 255, 0.04);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        .p-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.25s ease;
+        }
+        .p-name {
+          font-family: "Oswald", sans-serif;
+          font-size: 0.92rem;
+          margin: 4px 0 8px;
+          line-height: 1.25;
+          min-height: 2.3em;
+        }
+        @media (hover: hover) {
+          .p-card:hover { transform: translateY(-4px); border-color: var(--gold); box-shadow: 0 10px 26px rgba(0,0,0,0.35); }
+          .p-card:hover .p-img { transform: scale(1.05); }
+        }
+      `}</style>
     </div>
   );
 }
 
-function Chip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
