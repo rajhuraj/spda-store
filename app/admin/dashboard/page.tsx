@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [fetching, setFetching] = useState(false);
   const [fetchMsg, setFetchMsg] = useState("");
 
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [category, setCategory] = useState("General");
   const [price, setPrice] = useState("");
@@ -22,7 +23,6 @@ export default function DashboardPage() {
   const [affiliateLink, setAffiliateLink] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Auth guard
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
@@ -42,10 +42,6 @@ export default function DashboardPage() {
     if (data) setProducts(data as Product[]);
   }
 
-  // ── LIVE BROWSER FETCH ──
-  // Ye seedha tumhare browser se chalta hai (Supabase server se nahi),
-  // isliye Amazon/Flipkart ka bot-block kaafi kam lagta hai. Uses
-  // microlink.io — free public API, koi key nahi chahiye.
   async function handleFetchMeta() {
     if (!sourceUrl.trim()) return;
     setFetching(true);
@@ -79,29 +75,8 @@ export default function DashboardPage() {
     setFetching(false);
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name || !price || !affiliateLink) {
-      alert("Naam, price, aur affiliate link zaroori hai.");
-      return;
-    }
-    setSaving(true);
-    const { error } = await supabase.from("products").insert({
-      name,
-      category: category || "General",
-      price,
-      mrp: mrp || null,
-      image_url: imageUrl || null,
-      affiliate_link: affiliateLink,
-      source_url: sourceUrl || null,
-    });
-    setSaving(false);
-
-    if (error) {
-      alert("Save nahi hua: " + error.message);
-      return;
-    }
-
+  function resetForm() {
+    setEditingId(null);
     setSourceUrl("");
     setName("");
     setCategory("General");
@@ -110,12 +85,58 @@ export default function DashboardPage() {
     setImageUrl("");
     setAffiliateLink("");
     setFetchMsg("");
+  }
+
+  function startEdit(p: Product) {
+    setEditingId(p.id);
+    setSourceUrl(p.source_url || "");
+    setName(p.name);
+    setCategory(p.category);
+    setPrice(p.price);
+    setMrp(p.mrp || "");
+    setImageUrl(p.image_url || "");
+    setAffiliateLink(p.affiliate_link);
+    setFetchMsg("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name || !price || !affiliateLink) {
+      alert("Naam, price, aur affiliate link zaroori hai.");
+      return;
+    }
+    setSaving(true);
+
+    const payload = {
+      name,
+      category: category || "General",
+      price,
+      mrp: mrp || null,
+      image_url: imageUrl || null,
+      affiliate_link: affiliateLink,
+      source_url: sourceUrl || null,
+    };
+
+    const { error } = editingId
+      ? await supabase.from("products").update(payload).eq("id", editingId)
+      : await supabase.from("products").insert(payload);
+
+    setSaving(false);
+
+    if (error) {
+      alert("Save nahi hua: " + error.message);
+      return;
+    }
+
+    resetForm();
     loadProducts();
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Ye product delete karna hai?")) return;
     await supabase.from("products").delete().eq("id", id);
+    if (editingId === id) resetForm();
     loadProducts();
   }
 
@@ -135,9 +156,18 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* ADD PRODUCT */}
+      {/* ADD / EDIT PRODUCT */}
       <div className="card" style={{ padding: 22, marginBottom: 30 }}>
-        <h2 style={{ fontSize: "1.1rem", marginTop: 0 }}>Naya Product Add Karo</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2 style={{ fontSize: "1.1rem", marginTop: 0 }}>
+            {editingId ? "Product Edit Karo" : "Naya Product Add Karo"}
+          </h2>
+          {editingId && (
+            <button type="button" className="btn-outline btn" onClick={resetForm} style={{ fontSize: "0.8rem", padding: "6px 12px" }}>
+              Cancel
+            </button>
+          )}
+        </div>
 
         <label style={{ fontSize: "0.85rem", opacity: 0.8 }}>Product ka link (Amazon/Flipkart)</label>
         <div style={{ display: "flex", gap: 8, margin: "6px 0 16px" }}>
@@ -198,7 +228,7 @@ export default function DashboardPage() {
           </Field>
 
           <button className="btn" type="submit" disabled={saving} style={{ marginTop: 8 }}>
-            {saving ? "Save ho raha hai..." : "Product Save Karo"}
+            {saving ? "Save ho raha hai..." : editingId ? "Update Karo" : "Product Save Karo"}
           </button>
         </form>
       </div>
@@ -210,7 +240,13 @@ export default function DashboardPage() {
           <div
             key={p.id}
             className="card"
-            style={{ display: "flex", alignItems: "center", gap: 14, padding: 12 }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              padding: 12,
+              borderColor: editingId === p.id ? "var(--gold)" : undefined,
+            }}
           >
             {p.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -218,15 +254,26 @@ export default function DashboardPage() {
             ) : (
               <div style={{ width: 50, height: 50, background: "rgba(255,255,255,0.08)", borderRadius: 6 }} />
             )}
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700 }}>{p.name}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {p.name}
+              </div>
               <div style={{ fontSize: "0.82rem", opacity: 0.6 }}>
                 {p.category} · {p.price}
               </div>
             </div>
-            <button className="btn-outline btn" onClick={() => handleDelete(p.id)} style={{ color: "var(--danger)", borderColor: "var(--danger)" }}>
-              Delete
-            </button>
+            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+              <button className="btn-outline btn" onClick={() => startEdit(p)} style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
+                Edit
+              </button>
+              <button
+                className="btn-outline btn"
+                onClick={() => handleDelete(p.id)}
+                style={{ color: "var(--danger)", borderColor: "var(--danger)", padding: "6px 12px", fontSize: "0.85rem" }}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
