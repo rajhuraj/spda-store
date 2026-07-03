@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const [category, setCategory] = useState("General");
   const [price, setPrice] = useState("");
   const [mrp, setMrp] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [images, setImages] = useState<string[]>([""]);
   const [affiliateLink, setAffiliateLink] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -61,12 +61,18 @@ export default function DashboardPage() {
 
       const d = json.data;
       if (d.title) setName(d.title);
-      if (d.image?.url) setImageUrl(d.image.url);
-      else if (d.logo?.url) setImageUrl(d.logo.url);
+      const fetchedImg = d.image?.url || d.logo?.url;
+      if (fetchedImg) {
+        setImages((prev) => {
+          const copy = [...prev];
+          copy[0] = fetchedImg;
+          return copy;
+        });
+      }
 
       setFetchMsg(
-        d.image?.url
-          ? "Naam aur photo mil gaye ✅ — price khud check karke daal do (wo automatically nahi milta)."
+        fetchedImg
+          ? "Naam aur photo mil gaye ✅ — price khud check karke daal do (wo automatically nahi milta). Aur photos neeche 'Aur Photo Add Karo' se daal sakte ho."
           : "Naam mil gaya, photo nahi mili — image URL manually daal do."
       );
     } catch (err) {
@@ -82,7 +88,7 @@ export default function DashboardPage() {
     setCategory("General");
     setPrice("");
     setMrp("");
-    setImageUrl("");
+    setImages([""]);
     setAffiliateLink("");
     setFetchMsg("");
   }
@@ -92,28 +98,41 @@ export default function DashboardPage() {
     setSourceUrl(p.source_url || "");
     setName(p.name);
     setCategory(p.category);
-    setPrice(p.price);
+    setPrice(p.price || "");
     setMrp(p.mrp || "");
-    setImageUrl(p.image_url || "");
+    setImages(p.images?.length ? p.images : p.image_url ? [p.image_url] : [""]);
     setAffiliateLink(p.affiliate_link);
     setFetchMsg("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function updateImageAt(index: number, value: string) {
+    setImages((prev) => prev.map((img, i) => (i === index ? value : img)));
+  }
+  function addImageField() {
+    setImages((prev) => [...prev, ""]);
+  }
+  function removeImageField(index: number) {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!name || !price || !affiliateLink) {
-      alert("Naam, price, aur affiliate link zaroori hai.");
+    if (!name || !affiliateLink) {
+      alert("Naam aur affiliate link zaroori hai.");
       return;
     }
     setSaving(true);
 
+    const cleanImages = images.map((i) => i.trim()).filter(Boolean);
+
     const payload = {
       name,
       category: category || "General",
-      price,
+      price: price || null,
       mrp: mrp || null,
-      image_url: imageUrl || null,
+      images: cleanImages,
+      image_url: cleanImages[0] || null,
       affiliate_link: affiliateLink,
       source_url: sourceUrl || null,
     };
@@ -198,8 +217,8 @@ export default function DashboardPage() {
 
           <div style={{ display: "flex", gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <Field label="Price *">
-                <input className="input" value={price} onChange={(e) => setPrice(e.target.value)} required placeholder="₹599" />
+              <Field label="Price (optional)">
+                <input className="input" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="₹599 — chhod bhi sakte ho" />
               </Field>
             </div>
             <div style={{ flex: 1 }}>
@@ -209,13 +228,37 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <Field label="Photo URL">
-            <input className="input" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
+          <Field label="Photos">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {images.map((img, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input
+                    className="input"
+                    value={img}
+                    onChange={(e) => updateImageAt(i, e.target.value)}
+                    placeholder={`Photo ${i + 1} ka URL`}
+                  />
+                  {img && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={img} alt="" style={{ width: 38, height: 38, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
+                  )}
+                  {images.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeImageField(i)}
+                      className="btn-outline btn"
+                      style={{ padding: "6px 10px", flexShrink: 0 }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={addImageField} className="btn-outline btn" style={{ alignSelf: "flex-start", fontSize: "0.82rem", padding: "6px 12px" }}>
+                + Aur Photo Add Karo
+              </button>
+            </div>
           </Field>
-          {imageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="preview" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, marginBottom: 12 }} />
-          )}
 
           <Field label="Tumhari Affiliate Link (Buy button yahan jayega) *">
             <input
@@ -236,46 +279,49 @@ export default function DashboardPage() {
       {/* EXISTING PRODUCTS */}
       <h2 style={{ fontSize: "1.1rem" }}>Existing Products ({products.length})</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {products.map((p) => (
-          <div
-            key={p.id}
-            className="card"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              padding: 12,
-              borderColor: editingId === p.id ? "var(--gold)" : undefined,
-            }}
-          >
-            {p.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.image_url} alt={p.name} style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 6 }} />
-            ) : (
-              <div style={{ width: 50, height: 50, background: "rgba(255,255,255,0.08)", borderRadius: 6 }} />
-            )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {p.name}
+        {products.map((p) => {
+          const cover = p.images?.[0] || p.image_url;
+          return (
+            <div
+              key={p.id}
+              className="card"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                padding: 12,
+                borderColor: editingId === p.id ? "var(--gold)" : undefined,
+              }}
+            >
+              {cover ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={cover} alt={p.name} style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 6 }} />
+              ) : (
+                <div style={{ width: 50, height: 50, background: "rgba(255,255,255,0.08)", borderRadius: 6 }} />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {p.name}
+                </div>
+                <div style={{ fontSize: "0.82rem", opacity: 0.6 }}>
+                  {p.category} {p.price ? `· ${p.price}` : ""}
+                </div>
               </div>
-              <div style={{ fontSize: "0.82rem", opacity: 0.6 }}>
-                {p.category} · {p.price}
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                <button className="btn-outline btn" onClick={() => startEdit(p)} style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
+                  Edit
+                </button>
+                <button
+                  className="btn-outline btn"
+                  onClick={() => handleDelete(p.id)}
+                  style={{ color: "var(--danger)", borderColor: "var(--danger)", padding: "6px 12px", fontSize: "0.85rem" }}
+                >
+                  Delete
+                </button>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-              <button className="btn-outline btn" onClick={() => startEdit(p)} style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
-                Edit
-              </button>
-              <button
-                className="btn-outline btn"
-                onClick={() => handleDelete(p.id)}
-                style={{ color: "var(--danger)", borderColor: "var(--danger)", padding: "6px 12px", fontSize: "0.85rem" }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </main>
   );
