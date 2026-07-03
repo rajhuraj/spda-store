@@ -31,7 +31,6 @@ export default function StorePage() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Modal khule to background scroll na ho
   useEffect(() => {
     document.body.style.overflow = selected ? "hidden" : "";
     return () => {
@@ -81,53 +80,8 @@ export default function StorePage() {
         ))}
       </div>
 
-      {/* DETAIL MODAL — fully opaque, kuch peeche nahi dikhega */}
-      {selected && (
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div onClick={(e) => e.stopPropagation()} className="modal-card card">
-            <button onClick={() => setSelected(null)} aria-label="Band karo" className="modal-close">
-              ✕
-            </button>
-
-            <div className="modal-photo">
-              {selected.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={selected.image_url} alt={selected.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-              ) : (
-                <span style={{ opacity: 0.3 }}>No photo</span>
-              )}
-            </div>
-
-            <div style={{ padding: "20px 22px 26px" }}>
-              <div style={{ fontSize: "0.78rem", color: "var(--gold-light)", fontWeight: 700, letterSpacing: 0.5 }}>
-                {selected.category}
-              </div>
-              <h2 style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.35rem", margin: "6px 0 14px" }}>
-                {selected.name}
-              </h2>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 20 }}>
-                <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.6rem", color: "var(--gold-light)" }}>
-                  {selected.price}
-                </span>
-                {selected.mrp && (
-                  <span style={{ fontSize: "0.95rem", opacity: 0.4, textDecoration: "line-through" }}>
-                    {selected.mrp}
-                  </span>
-                )}
-              </div>
-              <a
-                href={selected.affiliate_link}
-                target="_blank"
-                rel="noopener noreferrer sponsored"
-                className="btn"
-                style={{ display: "block", textAlign: "center", fontSize: "1.05rem", padding: "14px" }}
-              >
-                Buy Now
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* DETAIL MODAL — floating window, solid (not see-through) */}
+      {selected && <ProductModal product={selected} onClose={() => setSelected(null)} />}
 
       <style jsx>{`
         .topbar {
@@ -163,48 +117,6 @@ export default function StorePage() {
           max-width: 1100px;
           margin: 0 auto;
         }
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: #14180a;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-          z-index: 100;
-        }
-        .modal-card {
-          max-width: 720px;
-          width: 100%;
-          height: 100%;
-          max-height: 100vh;
-          overflow-y: auto;
-          border-radius: 0;
-          border: none;
-          position: relative;
-        }
-        .modal-photo {
-          aspect-ratio: 1;
-          background: rgba(255, 255, 255, 0.04);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .modal-close {
-          position: absolute;
-          top: 12px;
-          right: 12px;
-          background: rgba(0, 0, 0, 0.55);
-          border: none;
-          color: white;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          font-size: 18px;
-          cursor: pointer;
-          z-index: 2;
-        }
-
         @media (min-width: 540px) {
           .products-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 18px 20px 60px; }
           .topbar-tagline { display: inline; }
@@ -212,8 +124,6 @@ export default function StorePage() {
         }
         @media (min-width: 768px) {
           .products-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 20px 24px 70px; }
-          .modal-overlay { padding: 20px; background: rgba(20, 24, 10, 0.96); }
-          .modal-card { height: auto; max-height: 90vh; border-radius: 12px; border: 1.5px solid rgba(200,149,42,0.25); }
         }
         @media (min-width: 1024px) {
           .products-grid { grid-template-columns: repeat(5, 1fr); }
@@ -223,13 +133,148 @@ export default function StorePage() {
   );
 }
 
+function ProductModal({ product, onClose }: { product: Product; onClose: () => void }) {
+  const gallery = product.images?.length ? product.images : product.image_url ? [product.image_url] : [];
+  const [activeImg, setActiveImg] = useState(0);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="modal-card card">
+        <button onClick={onClose} aria-label="Band karo" className="modal-close">
+          ✕
+        </button>
+
+        <div className="modal-photo">
+          {gallery.length > 0 ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={gallery[activeImg]} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          ) : (
+            <span style={{ opacity: 0.3 }}>No photo</span>
+          )}
+        </div>
+
+        {gallery.length > 1 && (
+          <div className="modal-thumbs">
+            {gallery.map((img, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                src={img}
+                alt=""
+                onClick={() => setActiveImg(i)}
+                className={`thumb ${i === activeImg ? "thumb-active" : ""}`}
+              />
+            ))}
+          </div>
+        )}
+
+        <div style={{ padding: "18px 22px 26px" }}>
+          <div style={{ fontSize: "0.78rem", color: "var(--gold-light)", fontWeight: 700, letterSpacing: 0.5 }}>
+            {product.category}
+          </div>
+          <h2 style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.35rem", margin: "6px 0 14px" }}>
+            {product.name}
+          </h2>
+          {product.price && (
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 20 }}>
+              <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.6rem", color: "var(--gold-light)" }}>
+                {product.price}
+              </span>
+              {product.mrp && (
+                <span style={{ fontSize: "0.95rem", opacity: 0.4, textDecoration: "line-through" }}>
+                  {product.mrp}
+                </span>
+              )}
+            </div>
+          )}
+          <a
+            href={product.affiliate_link}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+            className="btn"
+            style={{ display: "block", textAlign: "center", fontSize: "1.05rem", padding: "14px", marginTop: product.price ? 0 : 16 }}
+          >
+            Buy Now
+          </a>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(10, 12, 6, 0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+          z-index: 100;
+        }
+        .modal-card {
+          max-width: 480px;
+          width: 100%;
+          max-height: 88vh;
+          overflow-y: auto;
+          border-radius: 16px;
+          position: relative;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .modal-photo {
+          aspect-ratio: 1;
+          background: rgba(255, 255, 255, 0.04);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 16px 16px 0 0;
+          overflow: hidden;
+        }
+        .modal-thumbs {
+          display: flex;
+          gap: 8px;
+          padding: 10px 22px 0;
+          overflow-x: auto;
+        }
+        .thumb {
+          width: 46px;
+          height: 46px;
+          object-fit: cover;
+          border-radius: 6px;
+          cursor: pointer;
+          border: 2px solid transparent;
+          opacity: 0.6;
+          flex-shrink: 0;
+        }
+        .thumb-active {
+          border-color: var(--gold);
+          opacity: 1;
+        }
+        .modal-close {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(0, 0, 0, 0.55);
+          border: none;
+          color: white;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          font-size: 16px;
+          cursor: pointer;
+          z-index: 2;
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void }) {
+  const cover = product.images?.[0] || product.image_url;
   return (
     <div className="p-card card" onClick={onOpen}>
       <div className="p-photo">
-        {product.image_url ? (
+        {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={product.image_url} alt={product.name} className="p-img" />
+          <img src={cover} alt={product.name} className="p-img" />
         ) : (
           <span style={{ opacity: 0.3, fontSize: 12 }}>No photo</span>
         )}
@@ -239,23 +284,25 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void
           {product.category}
         </div>
         <div className="p-name">{product.name}</div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.02rem", color: "var(--gold-light)" }}>
-            {product.price}
-          </span>
-          {product.mrp && (
-            <span style={{ fontSize: "0.72rem", opacity: 0.4, textDecoration: "line-through" }}>
-              {product.mrp}
+        {product.price && (
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.02rem", color: "var(--gold-light)" }}>
+              {product.price}
             </span>
-          )}
-        </div>
+            {product.mrp && (
+              <span style={{ fontSize: "0.72rem", opacity: 0.4, textDecoration: "line-through" }}>
+                {product.mrp}
+              </span>
+            )}
+          </div>
+        )}
         <a
           href={product.affiliate_link}
           target="_blank"
           rel="noopener noreferrer sponsored"
           onClick={(e) => e.stopPropagation()}
           className="btn"
-          style={{ display: "block", fontSize: "0.84rem", padding: "8px" }}
+          style={{ display: "block", fontSize: "0.84rem", padding: "8px", marginTop: product.price ? 0 : 10 }}
         >
           Buy Now
         </a>
