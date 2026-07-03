@@ -34,15 +34,15 @@ export default function StorePage() {
       <div
         style={{
           background: "linear-gradient(135deg, #2a3312 0%, #3d4a1e 60%, #4a5a20 100%)",
-          padding: "48px 20px 40px",
+          padding: "26px 20px 22px",
           textAlign: "center",
           borderBottom: "2px solid rgba(200,149,42,0.3)",
         }}
       >
-        <h1 style={{ fontSize: "clamp(2rem,4vw,3rem)", letterSpacing: "2px", margin: 0 }}>
+        <h1 style={{ fontSize: "clamp(1.4rem,2.8vw,1.9rem)", letterSpacing: "1px", margin: 0 }}>
           Training <span style={{ color: "var(--gold-light)" }}>Gear</span> Store
         </h1>
-        <p style={{ color: "rgba(255,255,255,0.65)", marginTop: 8 }}>
+        <p style={{ color: "rgba(255,255,255,0.6)", marginTop: 6, fontSize: "0.9rem" }}>
           Yahi gear hum recommend karte hain — apna kit select karo
         </p>
       </div>
