@@ -118,7 +118,9 @@ export default function StorePage() {
           margin: 0 auto;
           position: sticky;
           top: 0;
-          background: var(--olive-dark);
+          background:
+            repeating-linear-gradient(135deg, rgba(232,184,75,0.05) 0 2px, transparent 2px 22px),
+            var(--olive-dark);
           z-index: 10;
         }
         .products-grid {
