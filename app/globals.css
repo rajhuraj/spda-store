@@ -14,7 +14,9 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--olive-dark);
+  background:
+    repeating-linear-gradient(135deg, rgba(232,184,75,0.05) 0 2px, transparent 2px 22px),
+    var(--olive-dark);
   color: var(--white);
   font-family: 'Rajdhani', sans-serif;
 }
@@ -68,7 +70,7 @@ button, input, select {
 }
 
 .card {
-  background: rgba(255,255,255,0.05);
+  background: #232b12;
   border: 1.5px solid rgba(200,149,42,0.25);
   border-radius: 12px;
 }
