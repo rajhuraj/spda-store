@@ -318,6 +318,7 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void
               fill
               sizes="(max-width: 540px) 45vw, (max-width: 1024px) 25vw, 200px"
               className="p-img"
+              style={{ objectFit: "contain" }}
               unoptimized={!cover.startsWith("http")}
             />
           </div>
