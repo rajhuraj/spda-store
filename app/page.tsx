@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import { Product } from "@/lib/types";
 
@@ -149,49 +150,61 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="modal-card card">
+      <div onClick={(e) => e.stopPropagation()} className="modal-card">
         <button onClick={onClose} aria-label="Band karo" className="modal-close">
           ✕
         </button>
 
-        <div className="modal-photo">
-          {gallery.length > 0 ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={gallery[activeImg]} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-          ) : (
-            <span style={{ opacity: 0.3 }}>No photo</span>
+        <div className="modal-scroll">
+          <div className="modal-photo">
+            {gallery.length > 0 ? (
+              <Image
+                src={gallery[activeImg]}
+                alt={product.name}
+                fill
+                sizes="(max-width: 540px) 100vw, 480px"
+                style={{ objectFit: "contain" }}
+                unoptimized={!gallery[activeImg].startsWith("http")}
+              />
+            ) : (
+              <span style={{ opacity: 0.3 }}>No photo</span>
+            )}
+          </div>
+
+          {gallery.length > 1 && (
+            <div className="modal-thumbs">
+              {gallery.map((img, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={i}
+                  src={img}
+                  alt=""
+                  onClick={() => setActiveImg(i)}
+                  className={`thumb ${i === activeImg ? "thumb-active" : ""}`}
+                />
+              ))}
+            </div>
           )}
+
+          <div style={{ padding: "18px 22px 4px" }}>
+            <div style={{ fontSize: "0.78rem", color: "var(--gold-light)", fontWeight: 700, letterSpacing: 0.5 }}>
+              {product.category}
+            </div>
+            <h2 style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.35rem", margin: "6px 0 0" }}>
+              {product.name}
+            </h2>
+          </div>
         </div>
 
-        {gallery.length > 1 && (
-          <div className="modal-thumbs">
-            {gallery.map((img, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={i}
-                src={img}
-                alt=""
-                onClick={() => setActiveImg(i)}
-                className={`thumb ${i === activeImg ? "thumb-active" : ""}`}
-              />
-            ))}
-          </div>
-        )}
-
-        <div style={{ padding: "18px 22px 26px" }}>
-          <div style={{ fontSize: "0.78rem", color: "var(--gold-light)", fontWeight: 700, letterSpacing: 0.5 }}>
-            {product.category}
-          </div>
-          <h2 style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.35rem", margin: "6px 0 14px" }}>
-            {product.name}
-          </h2>
+        {/* Price + Buy — hamesha fully visible rehta hai, scroll me nahi chhupta */}
+        <div className="modal-footer">
           {product.price && (
-            <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 20 }}>
-              <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.6rem", color: "var(--gold-light)" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 12 }}>
+              <span style={{ fontFamily: "Oswald, sans-serif", fontSize: "1.5rem", color: "var(--gold-light)" }}>
                 {product.price}
               </span>
               {product.mrp && (
-                <span style={{ fontSize: "0.95rem", opacity: 0.4, textDecoration: "line-through" }}>
+                <span style={{ fontSize: "0.9rem", opacity: 0.4, textDecoration: "line-through" }}>
                   {product.mrp}
                 </span>
               )}
@@ -202,7 +215,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
             target="_blank"
             rel="noopener noreferrer sponsored"
             className="btn"
-            style={{ display: "block", textAlign: "center", fontSize: "1.05rem", padding: "14px", marginTop: product.price ? 0 : 16 }}
+            style={{ display: "block", textAlign: "center", fontSize: "1.05rem", padding: "14px" }}
           >
             Buy Now
           </a>
@@ -213,7 +226,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(10, 12, 6, 0.9);
+          background: #0a0c06;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -224,19 +237,34 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
           max-width: 480px;
           width: 100%;
           max-height: 88vh;
-          overflow-y: auto;
           border-radius: 16px;
           position: relative;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+          display: flex;
+          flex-direction: column;
+          background: var(--olive-dark);
+          border: 1.5px solid rgba(200, 149, 42, 0.3);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+          overflow: hidden;
+        }
+        .modal-scroll {
+          overflow-y: auto;
+          flex: 1;
+          min-height: 0;
+        }
+        .modal-footer {
+          padding: 14px 22px 20px;
+          background: var(--olive-dark);
+          border-top: 1px solid rgba(200, 149, 42, 0.2);
+          flex-shrink: 0;
         }
         .modal-photo {
           aspect-ratio: 1;
-          background: rgba(255, 255, 255, 0.04);
+          background: #f4f1ea;
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 16px 16px 0 0;
           overflow: hidden;
+          position: relative;
         }
         .modal-thumbs {
           display: flex;
@@ -283,8 +311,14 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void
     <div className="p-card card" onClick={onOpen}>
       <div className="p-photo">
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt={product.name} className="p-img" />
+          <Image
+            src={cover}
+            alt={product.name}
+            fill
+            sizes="(max-width: 540px) 45vw, (max-width: 1024px) 25vw, 200px"
+            className="p-img"
+            unoptimized={!cover.startsWith("http")}
+          />
         ) : (
           <span style={{ opacity: 0.3, fontSize: 12 }}>No photo</span>
         )}
@@ -330,10 +364,9 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void
           align-items: center;
           justify-content: center;
           overflow: hidden;
+          position: relative;
         }
         .p-img {
-          width: 100%;
-          height: 100%;
           object-fit: cover;
           transition: transform 0.25s ease;
         }
