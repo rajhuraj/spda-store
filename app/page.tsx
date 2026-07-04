@@ -93,6 +93,9 @@ export default function StorePage() {
           gap: 10px;
           padding: 14px 20px;
           border-bottom: 1px solid rgba(200, 149, 42, 0.2);
+          background: var(--olive-dark);
+          position: relative;
+          z-index: 5;
         }
         .topbar-link {
           margin-left: auto;
