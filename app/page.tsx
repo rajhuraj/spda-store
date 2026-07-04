@@ -311,14 +311,16 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void
     <div className="p-card card" onClick={onOpen}>
       <div className="p-photo">
         {cover ? (
-          <Image
-            src={cover}
-            alt={product.name}
-            fill
-            sizes="(max-width: 540px) 45vw, (max-width: 1024px) 25vw, 200px"
-            className="p-img"
-            unoptimized={!cover.startsWith("http")}
-          />
+          <div className="p-photo-inner">
+            <Image
+              src={cover}
+              alt={product.name}
+              fill
+              sizes="(max-width: 540px) 45vw, (max-width: 1024px) 25vw, 200px"
+              className="p-img"
+              unoptimized={!cover.startsWith("http")}
+            />
+          </div>
         ) : (
           <span style={{ opacity: 0.3, fontSize: 12 }}>No photo</span>
         )}
@@ -359,15 +361,19 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void
         }
         .p-photo {
           aspect-ratio: 1;
-          background: rgba(255, 255, 255, 0.04);
+          background: #f4f1ea;
           display: flex;
           align-items: center;
           justify-content: center;
           overflow: hidden;
           position: relative;
         }
+        .p-photo-inner {
+          position: absolute;
+          inset: 10px;
+        }
         .p-img {
-          object-fit: cover;
+          object-fit: contain;
           transition: transform 0.25s ease;
         }
         .p-name {
