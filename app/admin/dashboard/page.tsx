@@ -115,6 +115,15 @@ export default function DashboardPage() {
   function removeImageField(index: number) {
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
+  function moveImage(index: number, direction: -1 | 1) {
+    setImages((prev) => {
+      const target = index + direction;
+      if (target < 0 || target >= prev.length) return prev;
+      const copy = [...prev];
+      [copy[index], copy[target]] = [copy[target], copy[index]];
+      return copy;
+    });
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -228,10 +237,33 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <Field label="Photos">
+          <Field label="Photos (pehli photo cover/main photo banegi)">
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {images.map((img, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div key={i} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2, flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => moveImage(i, -1)}
+                      disabled={i === 0}
+                      className="btn-outline btn"
+                      style={{ padding: "2px 8px", fontSize: "0.7rem", lineHeight: 1.4, opacity: i === 0 ? 0.3 : 1 }}
+                      title="Upar le jao"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveImage(i, 1)}
+                      disabled={i === images.length - 1}
+                      className="btn-outline btn"
+                      style={{ padding: "2px 8px", fontSize: "0.7rem", lineHeight: 1.4, opacity: i === images.length - 1 ? 0.3 : 1 }}
+                      title="Neeche le jao"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                  <span style={{ fontSize: "0.75rem", opacity: 0.5, width: 16, flexShrink: 0 }}>{i + 1}</span>
                   <input
                     className="input"
                     value={img}
@@ -240,7 +272,7 @@ export default function DashboardPage() {
                   />
                   {img && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={img} alt="" style={{ width: 38, height: 38, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
+                    <img src={img} alt="" style={{ width: 38, height: 38, objectFit: "cover", borderRadius: 6, flexShrink: 0, border: i === 0 ? "2px solid var(--gold)" : "none" }} />
                   )}
                   {images.length > 1 && (
                     <button
